@@ -1,0 +1,5 @@
+source-logo.png
+preview*.svg
+__pycache__/
+*.pyc
+.venv/

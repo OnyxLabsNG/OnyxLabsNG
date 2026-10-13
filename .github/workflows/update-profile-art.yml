@@ -1,0 +1,48 @@
+name: Atualizar arte do perfil
+
+on:
+  schedule:
+    - cron: "17 6 * * *"   # todo dia às 03:17 (horário de Brasília)
+  workflow_dispatch:        # botão "Run workflow" para rodar na hora
+
+permissions:
+  contents: write
+
+concurrency:
+  group: update-profile-art
+  cancel-in-progress: true
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    env:
+      # contas somadas no gráfico da equipe -- adicione os sócios separados por vírgula
+      GH_PROFILE_USERS: "OnyxLabsNG,Stucaluc"
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: scripts/requirements.txt
+
+      - name: Instalar dependências
+        run: pip install -r scripts/requirements.txt
+
+      - name: Buscar contribuições e gerar o gráfico
+        run: |
+          python scripts/fetch_contributions.py
+          python scripts/render_heatmap_svg.py
+
+      - name: Commit (só se mudou)
+        run: |
+          git config user.name  "onyx-bot"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/contributions.json contrib-heatmap.svg
+          if git diff --cached --quiet; then
+            echo "Sem mudanças."
+          else
+            git commit -m "chore: atualiza gráfico de contribuições"
+            git push
+          fi

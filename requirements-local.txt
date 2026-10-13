@@ -1,0 +1,2 @@
+# Dependências locais (logo ASCII + painel). O workflow diário só usa scripts/requirements.txt.
+pillow
